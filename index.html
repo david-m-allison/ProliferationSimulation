@@ -239,7 +239,7 @@
                  <div class="control-item checkbox-item">
                     <label for="moonshot">DET "Moonshot"
                         <span class="tooltip">?
-                            <span class="tooltiptext">Simulates a concerted, well-funded effort to improve detection technologies, with larger and earlier capability jumps.</span>
+                            <span class="tooltiptext">Simulates a concerted, well-funded effort to improve improve nuclear proliferation detection-enhancing technologies, with larger and earlier capability jumps.</span>
                         </span>
                     </label>
                     <input type="checkbox" id="moonshot">
@@ -247,7 +247,7 @@
                 <div class="control-item checkbox-item">
                     <label for="opportunistic">Opportunistic Breakout
                          <span class="tooltip">?
-                            <span class="tooltiptext">Models the idea that more states might attempt a breakout if they perceive a significant and sustained advantage over detectors (high positive RAI).</span>
+                            <span class="tooltiptext">Models the idea that more states might attempt a nuclear breakout if they perceive a significant and sustained advantage over detectors (high positive RAI).</span>
                         </span>
                     </label>
                     <input type="checkbox" id="opportunistic">
@@ -255,7 +255,7 @@
             </div>
             
             <div class="control-group">
-                <h3>Proliferation-Enabling Tech. (PET)</h3>
+                <h3>Proliferation-Enabling Technologies (PET)</h3>
                  <div class="control-item">
                     <label for="petDoublingTime">Doubling Time (months)
                          <span class="tooltip">?
@@ -337,7 +337,7 @@
                     <div class="value" id="r10-value">0.000</div>
                 </div>
                 <div class="result-item">
-                    <div class="label">P(At Least One Breakout)</div>
+                    <div class="label">P(At Least One Undetected Nuclear Breakout)</div>
                     <div class="value" id="p10-value">0.00%</div>
                 </div>
             </div>
@@ -352,7 +352,7 @@
                  <canvas id="riskChart"></canvas>
             </div>
             <div class="disclaimer-text">
-                Note: This model is intended as a conceptual framework, not a forecast—its purpose is to help users explore how imbalances in technology growth may shape proliferation risks and inform strategic choices.
+                Note: This model is intended as a conceptual framework, not a forecast. its purpose is to help users explore how imbalances in technology growth may shape proliferation risks and inform strategic choices.
             </div>
 
         </div>
@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: [],
                 datasets: [
-                    { label: 'Cumulative Risk R(t)', data: [], borderColor: 'rgba(220, 53, 69, 0.8)', backgroundColor: 'rgba(220, 53, 69, 0.2)', borderWidth: 3, pointRadius: 0, fill: true }
+                    { label: 'Cumulative Risk R(T)', data: [], borderColor: 'rgba(220, 53, 69, 0.8)', backgroundColor: 'rgba(220, 53, 69, 0.2)', borderWidth: 3, pointRadius: 0, fill: true }
                 ]
             },
             options: {
@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     y: { 
                         min: 0, 
                         max: 1.5, 
-                        title: { display: true, text: 'Cumulative Risk R(t)', font: { weight: 'bold' } } 
+                        title: { display: true, text: 'Cumulative Risk R(T)', font: { weight: 'bold' } } 
                     }, 
                     x: commonXAxisOptions 
                 },
