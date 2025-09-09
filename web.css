@@ -11,6 +11,7 @@
   --darkAccent-hsl: 0, 2%, 66%;
 }
 
+
 :root {
   --course-item-nav-text-color: hsla(var(--safeInverseLightAccent-hsl),1);
   --tweak-blog-item-pagination-icon-color: hsla(var(--black-hsl),1);
