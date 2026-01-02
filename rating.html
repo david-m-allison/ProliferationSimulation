@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sex Skills Quiz</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; max-width: 760px; margin: 32px auto; padding: 0 16px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin: 12px 0; }
+    h1, h2, h3 { margin: 0 0 10px 0; }
+    .muted { color: #666; }
+    button { padding: 10px 12px; border-radius: 10px; border: 1px solid #ccc; background: #f7f7f7; cursor: pointer; }
+    button.primary { background: #111; color: #fff; border-color: #111; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    input[type="text"] { padding: 10px 12px; border-radius: 10px; border: 1px solid #ccc; width: 220px; text-transform: uppercase; }
+    label { display: block; padding: 8px 10px; border: 1px solid #eee; border-radius: 10px; cursor: pointer; margin: 8px 0; }
+    label:hover { background: #fafafa; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+    .pill { display: inline-block; padding: 2px 8px; border: 1px solid #ddd; border-radius: 999px; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<h1>Sex Skills Quiz</h1>
+<p class="muted">Rate your ex – honestly. Scores are stored on this device only.</p>
+
+<div id="app" class="card"></div>
+
+<div class="card">
+  <div class="row" style="justify-content: space-between;">
+    <h2 style="margin:0;">High Scores</h2>
+    <button id="clearScores">Clear</button>
+  </div>
+  <div id="scores" style="margin-top:10px;"></div>
+</div>
+
+<script>
+  // ---------- CONFIG ----------
+  const STORAGE_KEY = "quiz_ab_high_scores_v1";
+  const MAX_SCORES = 10;
+
+  // Path A = Rating a Girl
+  // Path B = Rating a Guy
+  const QUESTION_SETS = {
+    A: [
+      // Section 1: Yes/No Basics (5 points each)
+      { id: "A1", text: "Did she enthusiastically give blowjobs (not just obligation)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A2", text: "Was she genuinely vocal/moaning in a hot way?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A3", text: "Did she ever initiate sex unprompted?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A4", text: "Was she down for multiple rounds in one session?", options: [
+        { label: "Yes", points: 3  }, { label: "No", points: 0 }
+      ]},
+      { id: "A5", text: "Did she swallow or handle the finish without drama?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A6", text: "Was she comfortable with you going down on her (and enjoying it)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A7", text: "Did she sext or flirt with you when you were apart?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A8", text: "Was she cool with dirty talk from you (didn't get offended)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A9", text: "Did she ever surprise you with lingerie or sexy outfits?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A10", text: "Was she open to quickies (not always needing a full production)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A11", text: "Did she prioritize your pleasure (e.g., tried to make you cum)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A12", text: "Was she hygienic and fresh intimately?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "A13", text: "Did she handle safe sex responsibly (protection, testing)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+
+
+      // Section 2: Multiple Choice Traits
+      
+      { id: "A14", text: "Pussy Grip/Tightness & Kegel Control", options: [
+        { label: "Vice grip + active squeezing = nutted too fast", points: 5 },
+        { label: "Strong and controlled, felt intentional", points: 4 },
+        { label: "Nice and snug, good feel", points: 3 },
+        { label: "Average, nothing standout", points: 2 },
+        { label: "A bit loose, less sensation", points: 1 },
+        { label: "Echoing hallway vibes", points: 0 },
+        { label: "Too tight, hard to enter/enjoy", points: 2 }
+      ]},
+      { id: "A15", text: "Natural Wetness", options: [
+        { label: "Flooded at a whisper", points: 5 },
+        { label: "Got soaking wet easily", points: 4 },
+        { label: "Reliable with foreplay", points: 3 },
+        { label: "Sometimes needed lube", points: 2 },
+        { label: "Mostly dry, lube mandatory", points: 1 },
+        { label: "Desert mode every time", points: 0 }
+      ]},
+      { id: "A16", text: "Cowgirl/Riding Skills", options: [
+        { label: "Twerking, grinding, full pornstar energy", points: 5 },
+        { label: "Great rhythm and angles", points: 4 },
+        { label: "Solid effort, kept pace", points: 3 },
+        { label: "Basic bounce, mostly you doing work", points: 2 },
+        { label: "Lazy or awkward", points: 1 },
+        { label: "Gave up immediately", points: 0 }
+      ]},
+      { id: "A17", text: "Oral Skills (on you)", options: [
+        { label: "Deep throat + eye contact + enthusiasm = legendary", points: 5 },
+        { label: "Really good, knew how to please you", points: 4 },
+        { label: "Solid technique, got the job done", points: 3 },
+        { label: "Basic, mostly tongue poking", points: 2 },
+        { label: "Rushed or ineffective", points: 1 },
+        { label: "Traumatic", points: 0 }
+      ]},
+      { id: "A18", text: "Dirty Talk Game", options: [
+        { label: "Filthy, creative, perfect timing", points: 5 },
+        { label: "Knew how to turn you on verbally", points: 4 },
+        { label: "Some hot lines here and there", points: 3 },
+        { label: "Basic encouragement only", points: 2 },
+        { label: "Mostly silent or giggly", points: 1 },
+        { label: "Said something mood-killing", points: 0 }
+      ]},
+      { id: "A19", text: "Freak Factor/Adventurousness", options: [
+        { label: "Down for anal, toys, roleplay, public, everything", points: 5 },
+        { label: "Very open, tried most kinks you wanted", points: 4 },
+        { label: "Expanded beyond vanilla comfortably", points: 3 },
+        { label: "Mostly standard but not prude", points: 2 },
+        { label: "Hesitant, limited variety", points: 1 },
+        { label: "Missionary only, lights off, no talking", points: 0 }
+      ]},
+      { id: "A20", text: "Kissing Skills", options: [
+        { label: "Passionate, expert kisser turning you on", points: 5 },
+        { label: "Good, sensual kisses", points: 4 },
+        { label: "Decent kissing", points: 3 },
+        { label: "Average or mechanical", points: 2 },
+        { label: "Sloppy or awkward", points: 1 },
+        { label: "Gross or no kissing", points: 0 }
+      ]},
+      { id: "A21", text: "Experience Balance", options: [
+        { label: "Way too promiscuous", points: 1 },
+        { label: "A bit too promiscuous", points: 3 },
+        { label: "Perfectly balanced - skilled without feeling promiscuous", points: 5 },
+        { label: "Experienced in a positive way", points: 4 },
+        { label: "Moderate experience, okay", points: 3 },
+        { label: "Inexperienced", points: 2 },
+      ]},
+      { id: "A22", text: "Responsiveness (moaning, feedback)", options: [
+        { label: "Highly responsive, guided you perfectly", points: 5 },
+        { label: "Very responsive and engaging", points: 4 },
+        { label: "Good responses", points: 3 },
+        { label: "Average feedback", points: 2 },
+        { label: "Not very responsive", points: 1 },
+        { label: "Starfish mode, no reaction", points: 0 }
+      ]},
+            { id: "A23", text: "Physical Attractiveness", options: [
+        { label: "Super hot, out of your league ", points: 5 },
+        { label: "Very attractive, you wanted to watch", points: 4 },
+        { label: "Attractive, lights on or off", points: 3 },
+        { label: "Decent looking, but not a plus", points: 2 },
+        { label: "Definitely below average", points: 1 },
+        { label: "Paper Bag + Lights Off", points: 0 }
+      ]},
+            { id: "A24", text: "Post-Sex Vibe / Aftercare", options: [
+  { label: "Cuddled, chatted, round 2 vibes – perfect glow", points: 5 },
+  { label: "Chill and affectionate, no weirdness", points: 4 },
+  { label: "Fine, got up and carried on", points: 3 },
+  { label: "Rushed off or awkward silence", points: 2 },
+  { label: "Kicked you out or went cold immediately", points: 1 },
+  { label: "Ghosted the morning after", points: 0 }
+]},
+      { id: "A25", text: "Did you ever question if she was faithful?", options: [
+        { label: "No", points: 6 }, { label: "A little", points: 3 }, { label: "Yes", points: 0 }
+      ]}
+      
+    ],
+
+            
+
+
+    B: [
+      // Section 1: Yes/No Basics for rating a guy (5 points each)
+      { id: "B1", text: "Did he enthusiastically go down on you (not just obligation)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B2", text: "Was he genuinely vocal/grunting in a hot way?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B3", text: "Did he ever initiate sex appropriately?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B4", text: "Was he down for multiple rounds in one session?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B5", text: "Did he handle your finish (or his) without drama?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B6", text: "Was he comfortable with you giving him head (and enjoying it)?", options: [
+        { label: "Yes", points: 3  }, { label: "No", points: 0 }
+      ]},
+      { id: "B7", text: "Did he ever give you proper foreplay that wasn't rushed?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B8", text: "Was he cool with dirty talk from you (didn't get weird)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B9", text: "Did he ever surprise you with effort (e.g. sexy setup, outfit, vibe)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B10", text: "Was he open to quickies (not always needing a full production)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B11", text: "Did he prioritize your pleasure (e.g., tried to make you cum)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B12", text: "Was he hygienic and fresh intimately?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+      { id: "B13", text: "Did he handle safe sex responsibly (protection, testing)?", options: [
+        { label: "Yes", points: 3 }, { label: "No", points: 0 }
+      ]},
+
+      // Section 2: Multiple Choice Traits for guys
+      { id: "B14", text: "Dick Hardness & Stamina Control", options: [
+        { label: "Rock hard the whole time + controlled when to finish", points: 5 },
+        { label: "Consistently hard, great staying power", points: 4 },
+        { label: "Hard enough, decent duration", points: 3 },
+        { label: "Average hardness/stamina", points: 2 },
+        { label: "Often soft or finished too quick", points: 1 },
+        { label: "Couldn't stay hard or lasted seconds", points: 0 }
+      ]},
+      { id: "B15", text: "Rhythm & Thrusting Skills", options: [
+        { label: "Perfect rhythm, deep, varied – pornstar level", points: 5 },
+        { label: "Excellent pace and angles, knew what worked", points: 4 },
+        { label: "Good consistent rhythm", points: 3 },
+        { label: "Average, sometimes off", points: 2 },
+        { label: "Jackhammer or no rhythm", points: 1 },
+        { label: "Barely moved, you did all the work", points: 0 }
+      ]},
+      { id: "B16", text: "Eating You Out Skills", options: [
+        { label: "Legendary technique + enthusiasm = multiple orgasms", points: 5 },
+        { label: "Really good, knew clit + variety", points: 4 },
+        { label: "Solid effort, got the job done", points: 3 },
+        { label: "Basic, mostly tongue poking", points: 2 },
+        { label: "Rushed or ineffective", points: 1 },
+        { label: "Refused or traumatic", points: 0 }
+      ]},
+      { id: "B17", text: "Foreplay & Touch Skills", options: [
+        { label: "Masterful – teasing, whole body, built insane tension", points: 5 },
+        { label: "Great hands/mouth, took his time", points: 4 },
+        { label: "Good, hit the right spots", points: 3 },
+        { label: "Average, some effort", points: 2 },
+        { label: "Minimal or clumsy", points: 1 },
+        { label: "Straight to penetration, no warm-up", points: 0 }
+      ]},
+      { id: "B18", text: "Dirty Talk Game", options: [
+        { label: "Filthy, dominant, perfect timing", points: 5 },
+        { label: "Knew how to turn you on verbally", points: 4 },
+        { label: "Some hot lines here and there", points: 3 },
+        { label: "Basic encouragement only", points: 2 },
+        { label: "Mostly silent or awkward", points: 1 },
+        { label: "Said something mood-killing", points: 0 }
+      ]},
+      { id: "B19", text: "Freak Factor/Adventurousness", options: [
+        { label: "Down for everything – toys, anal, roleplay, public", points: 5 },
+        { label: "Very open, tried most kinks you wanted", points: 4 },
+        { label: "Expanded beyond vanilla comfortably", points: 3 },
+        { label: "Mostly standard but not prude", points: 2 },
+        { label: "Hesitant, limited variety", points: 1 },
+        { label: "Missionary only, lights off, no talking", points: 0 }
+      ]},
+      { id: "B20", text: "Size Fit", options: [
+        { label: "Perfect size and fit for you", points: 5 },
+        { label: "Impressive and comfortable", points: 4 },
+        { label: "Nice size, satisfying", points: 3 },
+        { label: "Average", points: 2 },
+        { label: "A bit small, less sensation", points: 1 },
+        { label: "Way too small", points: 0 },
+        { label: "Too big, uncomfortable/painful", points: 1 }
+      ]},
+      { id: "B21", text: "Kissing Skills", options: [
+        { label: "Passionate, expert kisser turning you on", points: 5 },
+        { label: "Good, sensual kisses", points: 4 },
+        { label: "Decent kissing", points: 3 },
+        { label: "Average or mechanical", points: 2 },
+        { label: "Sloppy or awkward", points: 1 },
+        { label: "Gross or no kissing", points: 0 }
+      ]},
+      { id: "B22", text: "Experience Balance", options: [
+        { label: "Way too promiscuous", points: 1 },
+        { label: "A bit too promiscuous", points: 2 },
+        { label: "Perfectly balanced - skilled without feeling promiscuous", points: 5 },
+        { label: "Experienced in a positive way", points: 4 },
+        { label: "Moderate experience, okay", points: 3 },
+        { label: "Inexperienced", points: 2 },
+        { label: "Virgin", points: 1 }
+      ]},
+            { id: "B23", text: "Physical Attractiveness", options: [
+        { label: "Super hot, out of your league ", points: 5 },
+        { label: "Very attractive, you wanted to watch", points: 4 },
+        { label: "Attractive, lights on or off", points: 3 },
+        { label: "Decent looking, but not a plus", points: 2 },
+        { label: "Definitely below average", points: 1 },
+        { label: "Paper Bag + Lights Off", points: 0 }
+      ]},
+      { id: "B24", text: "Made You Orgasm Reliability", options: [
+  { label: "Multiple orgasms almost every time", points: 5 },
+  { label: "Got you off most sessions", points: 4 },
+  { label: "At least half the time", points: 3 },
+  { label: "Rarely, but happened", points: 2 },
+  { label: "Almost never", points: 1 },
+  { label: "Never once", points: 0 }
+]},
+{ id: "B25", text: "Post-Sex Effort / Aftercare", options: [
+  { label: "Cuddled, got you water, made you feel like a queen", points: 5 },
+  { label: "Decent cuddle or check-in, respectful", points: 4 },
+  { label: "Basic, no complaints", points: 3 },
+  { label: "Rolled over and passed out", points: 2 },
+  { label: "Got up and started playing Xbox", points: 1 },
+  { label: "Asked you to leave right after", points: 0 }
+]},
+      { id: "B26", text: "Did you ever question if he was faithful?", options: [
+        { label: "No", points: 6 }, { label: "A little", points: 3 }, { label: "Yes", points: 0 }
+      ]}
+      
+    ]
+  };
+
+  // Final grade based on percentage
+  function getFinalGrade(pct) {
+    if (pct >= 85) return "God/Goddess Tier";
+    if (pct >= 75) return "A-Tier Hottie";
+    if (pct >= 65) return "B-Tier Fun";
+    if (pct >= 55) return "C-Tier Average";
+    if (pct >= 45) return "D-Tier Disaster";
+    return "F-Tier Flop";
+  }
+
+  function compareScores(a, b) {
+    return (b.score - a.score) || (a.when - b.when);
+  }
+
+  // ---------- STATE ----------
+  const appEl = document.getElementById("app");
+  const scoresEl = document.getElementById("scores");
+  const clearBtn = document.getElementById("clearScores");
+
+  let initials = "";
+  let path = null; // "A" or "B"
+  let currentGroup = 0;
+  let picks = [];
+  let rawScore = 0;
+
+  const YES_NO_COUNT = 13; // Number of yes/no questions (indices 0 to 12)
+
+  // ---------- STORAGE ----------
+  function loadScores() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveScores(scores) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[c]));
+  }
+
+  // ---------- UI: SCORES ----------
+  function renderScores() {
+    const scores = loadScores();
+    if (!scores.length) {
+      scoresEl.innerHTML = '<p class="muted">No scores yet.</p>';
+      return;
+    }
+
+    const rows = scores.map((s, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${escapeHtml(s.initials)}</td>
+        <td><span class="pill">Path ${escapeHtml(s.path === "A" ? "Girl" : "Guy")}</span></td>
+        <td>${s.score}/${s.maxScore}</td>
+        <td><strong>${escapeHtml(s.grade)}</strong></td>
+        <td class="muted">${new Date(s.when).toLocaleString()}</td>
+      </tr>
+    `).join("");
+
+    scoresEl.innerHTML = `
+      <table>
+        <thead>
+          <tr><th>#</th><th>Initials</th><th>Type</th><th>Score</th><th>Grade</th><th>When</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  // ---------- FLOW SCREENS ----------
+  function showInitialsScreen() {
+    appEl.innerHTML = `
+      <h2>Enter name or initials</h2>
+      <p class="muted">Who are you rating today?</p>
+      <div class="row">
+        <input id="initialsInput" type="text" maxlength="6" placeholder="e.g. JD" autocomplete="off" />
+        <button id="continueBtn" class="primary">Continue</button>
+      </div>
+    `;
+
+    const input = document.getElementById("initialsInput");
+    const btn = document.getElementById("continueBtn");
+    input.focus();
+
+    function proceed() {
+      const val = (input.value || "").trim().toUpperCase();
+      initials = val || "ANON";
+      showPathSelectScreen();
+    }
+
+    btn.addEventListener("click", proceed);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") proceed(); });
+  }
+
+  function showPathSelectScreen() {
+    appEl.innerHTML = `
+      <h2>Who are you rating?</h2>
+      <p class="muted">Choose the gender (heterosexual perspective).</p>
+      <div class="row">
+        <button id="pathA" class="primary">A Girl</button>
+        <button id="pathB" class="primary">A Guy</button>
+        <button id="back" style="margin-left:auto;">Back</button>
+      </div>
+    `;
+
+    document.getElementById("pathA").addEventListener("click", () => startQuiz("A"));
+    document.getElementById("pathB").addEventListener("click", () => startQuiz("B"));
+    document.getElementById("back").addEventListener("click", () => {
+      initials = "";
+      showInitialsScreen();
+    });
+  }
+
+  function startQuiz(chosenPath) {
+    path = chosenPath;
+    currentGroup = 0;
+    picks = new Array(QUESTION_SETS[path].length).fill(null);
+    rawScore = 0;
+    showScreen();
+  }
+
+  function showScreen() {
+    const qs = QUESTION_SETS[path];
+    const totalGroups = 1 + (qs.length - YES_NO_COUNT); // 1 for yes/no group + one per multi-choice
+
+    let progress;
+    let backDisabled = currentGroup === 0;
+    let formContent = '';
+
+    if (currentGroup === 0) {
+      // Yes/No group
+      progress = `Basics: Questions 1-${YES_NO_COUNT} of ${qs.length}`;
+      formContent = '<h2>Section 1: Yes/No Basics</h2>';
+      qs.slice(0, YES_NO_COUNT).forEach((q, idx) => {
+        formContent += `
+          <h3 style="margin-bottom: 4px;">${escapeHtml(q.text)}</h3>
+          ${q.options.map((opt, optIdx) => `
+            <label>
+              <input type="radio" name="ans${idx}" value="${optIdx}" ${picks[idx] === optIdx ? 'checked' : ''} required />
+              ${escapeHtml(opt.label)}
+            </label>
+          `).join('')}
+        `;
+      });
+    } else {
+      // Single multi-choice question
+      const qIdx = YES_NO_COUNT + (currentGroup - 1);
+      const q = qs[qIdx];
+      progress = `Question ${qIdx + 1} of ${qs.length}`;
+      formContent = '<h2>Section 2: Traits</h2>';
+      formContent += `
+        <h3 style="margin-bottom: 4px;">${escapeHtml(q.text)}</h3>
+        ${q.options.map((opt, optIdx) => `
+          <label>
+            <input type="radio" name="answer" value="${optIdx}" ${picks[qIdx] === optIdx ? 'checked' : ''} required />
+            ${escapeHtml(opt.label)}
+          </label>
+        `).join('')}
+      `;
+    }
+
+    appEl.innerHTML = `
+      <div class="row" style="justify-content: space-between;">
+        <div class="muted">${escapeHtml(progress)}</div>
+        <div class="muted"><span class="pill">${path === "A" ? "Girl" : "Guy"}</span></div>
+      </div>
+      <form id="qform">
+        ${formContent}
+        <div class="row" style="margin-top: 16px;">
+          <button type="button" id="backBtn" ${backDisabled ? 'disabled' : ''}>Back</button>
+          <button type="submit" class="primary">Next</button>
+        </div>
+        <p class="muted">Score revealed at the end.</p>
+      </form>
+    `;
+
+    document.getElementById("backBtn").addEventListener("click", () => {
+      if (currentGroup > 0) {
+        currentGroup--;
+        showScreen();
+      }
+    });
+
+    document.getElementById("qform").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+
+      if (currentGroup === 0) {
+        // Process yes/no group
+        for (let idx = 0; idx < YES_NO_COUNT; idx++) {
+          const picked = Number(fd.get(`ans${idx}`));
+          picks[idx] = picked;
+        }
+      } else {
+        // Process single
+        const qIdx = YES_NO_COUNT + (currentGroup - 1);
+        const picked = Number(fd.get('answer'));
+        picks[qIdx] = picked;
+      }
+
+      rawScore = computeRawScoreFromPicks();
+
+      currentGroup++;
+      if (currentGroup >= totalGroups) {
+        finishQuiz();
+      } else {
+        showScreen();
+      }
+    });
+  }
+
+  function computeRawScoreFromPicks() {
+    const qs = QUESTION_SETS[path];
+    let sum = 0;
+    for (let i = 0; i < picks.length; i++) {
+      const optIndex = picks[i];
+      if (optIndex !== null) {
+        sum += qs[i].options[optIndex].points;
+      }
+    }
+    return sum;
+  }
+
+  function finishQuiz() {
+    const qs = QUESTION_SETS[path];
+    const maxScore = qs.reduce((acc, q) => acc + Math.max(...q.options.map(o => o.points)), 0);
+    const pct = (rawScore / maxScore) * 100;
+    const grade = getFinalGrade(pct);
+
+    const entry = { initials, path, score: rawScore, maxScore, grade, when: Date.now() };
+    const scores = loadScores();
+    scores.push(entry);
+    scores.sort(compareScores);
+    saveScores(scores.slice(0, MAX_SCORES));
+
+    renderScores();
+
+    appEl.innerHTML = `
+      <h2>Done!</h2>
+      <p style="font-size:1.5em;">${escapeHtml(initials)} scored <strong>${rawScore}</strong>/${maxScore}</p>
+      <p style="font-size:1.8em; margin:20px 0;"><strong>${escapeHtml(grade)}</strong></p>
+      <div class="row">
+        <button id="restartBtn" class="primary">Rate Again (Same Person)</button>
+        <button id="changePathBtn">Switch Gender</button>
+        <button id="changeInitialsBtn">Rate Someone New</button>
+      </div>
+    `;
+
+    document.getElementById("restartBtn").addEventListener("click", () => startQuiz(path));
+    document.getElementById("changePathBtn").addEventListener("click", () => showPathSelectScreen());
+    document.getElementById("changeInitialsBtn").addEventListener("click", () => {
+      initials = "";
+      path = null;
+      showInitialsScreen();
+    });
+  }
+
+  // ---------- CLEAR ----------
+  clearBtn.addEventListener("click", () => {
+    if (confirm("Clear all high scores?")) {
+      localStorage.removeItem(STORAGE_KEY);
+      renderScores();
+    }
+  });
+
+  // ---------- INIT ----------
+  renderScores();
+  showInitialsScreen();
+</script>
+
+</body>
+</html>
